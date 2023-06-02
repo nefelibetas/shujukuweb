@@ -25,8 +25,8 @@
             </el-form-item>
             <!--手机号-->
             <el-form-item layout="inline" label="" :colon="false" prop="phone">
-                <el-input placeholder="请输入电话号码" v-model="ruleForm.phone" :maxLength="11" style="width: 100%"
-                    allowClear prefix-icon=el-icon-phone>
+                <el-input placeholder="请输入电话号码" v-model="ruleForm.phone" :maxLength="11" style="width: 100%" allowClear
+                    prefix-icon=el-icon-phone>
                 </el-input>
             </el-form-item>
             <!--邮箱-->
@@ -54,7 +54,7 @@ export default {
     name: 'Register',
     data() {
         var checkPhone = (rule, value, callback) => {
-            if (value !== '' ) {
+            if (value !== '') {
                 let isPhone = /^((0\d{2,3})-)(\d{7,8})(-(\d{3,}))?$/;
                 let reg = /^(?:(?:\+|00)86)?1[3-9]\d{9}$/;
                 // if () {
@@ -73,11 +73,11 @@ export default {
 
         var checkusername = (rule, value, callback) => {
             if (value !== '') {
-                if (value.length<12)
+                if (value.length < 12)
                     callback();
                 else
                     callback(new Error("用户名太长"));
-            } else{
+            } else {
                 callback(new Error("用户名不能为空"));
             }
         };
@@ -121,7 +121,7 @@ export default {
                 password: '',
                 email: '',
                 phone: '',
-                is_admin : 0
+                is_admin: 0
             },
             rules: {
                 phone: [
@@ -138,7 +138,7 @@ export default {
                     { validator: validatePass2, trigger: 'blur' }
                 ],
                 email: [
-                    { validator : checkemail, trigger: "blur" },
+                    { validator: checkemail, trigger: "blur" },
                 ]
                 /* phone: [
                      { required: true, message: "请输入手机号码", trigger: 'blur' },//验证，为空时会提示
@@ -155,20 +155,21 @@ export default {
         submitForm(ruleForm) {
             this.axios.post('/api/user/signUp', ruleForm).then((resp) => {//单引号里面写后端路径,传值
                 let data = resp.data;
-                if (data.code==200){
+                if (data.code == 200) {
                     this.$message({
                         message: '注册成功，请登录',/*跳转到图书管理系统页面看这里*/
                         type: 'success'
                     });
                     this.$router.push({ path: '/' })
-                } else{
+                } else {
                     this.$message({
                         message: '用户已存在，请修改用户名',/*跳转到图书管理系统页面看这里*/
                         type: 'fail'
                     });
                 }
-                    
-            })},
+
+            })
+        },
         resetForm(ruleForm) {
             this.$refs[ruleForm].resetFields()
         },

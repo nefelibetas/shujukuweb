@@ -5,7 +5,7 @@
                 系统登录
             </h3>
             <el-form-item label="">
-                <el-input type="text" v-model="loginForm.username" placeholder="账号"></el-input>
+                <el-input type="text" v-model="loginForm.username" placeholder="用户名"></el-input>
             </el-form-item>
             <el-form-item label="">
                 <el-input type="password" v-model="loginForm.password" placeholder="密码"></el-input>
@@ -24,8 +24,8 @@
 
             <el-form-item>
                 <!---style="width:100%; 变宽--->
-                <el-button type="primary"  v-on:click="Login()">登录</el-button>
-                <el-button type="primary"  @click="toRegister()">注册</el-button><!---跳转到注册页面-->
+                <el-button type="primary" v-on:click="Login()">登录</el-button>
+                <el-button type="primary" @click="toRegister()">注册</el-button><!---跳转到注册页面-->
             </el-form-item>
         </el-form>
     </body>
@@ -44,7 +44,7 @@ export default {
             loginForm: {
                 username: '',
                 password: '',
-                isadmin:''
+                isadmin: ''
             }
         }
     },
@@ -55,32 +55,32 @@ export default {
             this.axios.post('/api/user/login', this.loginForm).then((resp) => {//单引号里面写后端路径,传值
                 let data = resp.data;
                 // console.log(data);
-                if (data.code==200) {  //如果这个data值是正确的
+                if (data.code == 200) {  //如果这个data值是正确的
                     //成功了就跳转
                     this.$message({
                         message: '登录成功，欢迎来到后台管理页面！',/*跳转到图书管理系统页面看这里*/
                         type: 'success'
                     });
-                    if(this.loginForm.isadmin==0)
+                    if (this.loginForm.isadmin == 0)
                         this.$router.push({ path: '/Home' })/*Home做例子 改为用户跳转的页面*/
                     else
                         this.$router.push({ path: '/about' })/*about做例子 改为管理员跳转的页面*/
                     //清空loginForm
                     this.loginForm = {};
                 }
-                else if(data.code==-221){
+                else if (data.code == -221) {
                     this.$message({
                         message: '用户不存在',
                         type: 'fail'
                     });
                 }
-                else if(data.code==-222){
+                else if (data.code == -222) {
                     this.$message({
                         message: '用户账号或者密码错误',
                         type: 'fail'
                     });
                 }
-                else if(data.code==-223){
+                else if (data.code == -223) {
                     this.$message({
                         message: '用户身份错误',
                         type: 'fail'
