@@ -25,6 +25,15 @@
           </el-form-item>
         </el-form>
       </div>
+      <div class="group">
+        <el-button
+          type="warning"
+          icon="el-icon-plus"
+          size="small"
+          @click="addDia = true"
+          >添加图书</el-button
+        >
+      </div>
     </div>
     <div class="content">
       <el-table
@@ -87,8 +96,15 @@
               size="mini"
               type="primary"
               icon="el-icon-edit"
-              @click="handleBorrow(scope.$index, scope.row)"
-              >借阅</el-button
+              @click="handleEdit(scope.$index, scope.row)"
+              >编辑</el-button
+            >
+            <el-button
+              size="mini"
+              type="danger"
+              icon="el-icon-delete"
+              @click="handleDelete(scope.$index, scope.row)"
+              >删除</el-button
             >
           </template>
         </el-table-column>
@@ -105,28 +121,80 @@
       </div>
     </div>
     <el-dialog
-      title="数量不足，是否预约"
-      :visible.sync="borrowDia"
+      title="确认修改项目"
+      :visible.sync="updateDia"
+      width="30%"
+    >
+      数量：<el-input v-model="beEdit.number" /> <br />
+      价格：<el-input v-model="beEdit.price" />
+      <span
+        slot="footer"
+        class="dialog-footer"
+      >
+        <el-button @click="updateDia = false">取 消</el-button>
+        <el-button
+          type="primary"
+          @click="updateRow"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
+    <el-dialog
+      title="请填写相关信息"
+      :visible.sync="addDia"
+      width="30%"
+    >
+      ISBN：<el-input v-model="beInsert.ISBN" /> <br />
+      书名：<el-input v-model="beInsert.bookName" /> <br />
+      作者：<el-input v-model="beInsert.writer" /> <br />
+      出版社：<el-input v-model="beInsert.publisher" /> <br />
+      出版日期：<el-date-picker
+        v-model="beInsert.publishTime"
+        type="date"
+        placeholder="选择日期"
+        format="yyyy-MM-dd mm:DD:ss"
+        value-format="yyyy-MM-dd mm:DD:ss"
+      ></el-date-picker>
+      <br />
+      数量：<el-input v-model="beInsert.number" /> <br />
+      价格：<el-input v-model="beInsert.price" />
+
+      <span
+        slot="footer"
+        class="dialog-footer"
+      >
+        <el-button @click="addDia = false">取 消</el-button>
+        <el-button
+          type="primary"
+          @click="addBookList"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
+    <el-dialog
+      title="确定删除？"
+      :visible.sync="deleteDia"
       width="30%"
     >
       <span
         slot="footer"
         class="dialog-footer"
       >
-        <el-button @click="borrowDia = false">取 消</el-button>
+        <el-button @click="deleteDia = false">取 消</el-button>
         <el-button
           type="primary"
-          @click="bookingBook"
-          >确 定</el-button
+          @click="deleteBookList"
         >
+          确 定
+        </el-button>
       </span>
     </el-dialog>
   </div>
 </template>
+
 <script>
-import { mapState } from "vuex";
 export default {
-  name: "BorrowView",
+  name: "BookManage",
   data() {
     return {
       booknum: {
@@ -135,11 +203,62 @@ export default {
       },
       beSearchISBN: "",
       tableData: [],
-      borrowDia: false,
-      borrowISBN: "",
+      updateDia: false,
+      addDia: false,
+      beEdit: {
+        ISBN: "",
+        number: "",
+        price: "",
+      },
+      beInsert: {
+        ISBN: "",
+        bookName: "",
+        writer: "",
+        publisher: "",
+        publishTime: "",
+        number: "",
+        price: "",
+      },
+      deleteDia: false,
+      beDeleteISBN: "",
     };
   },
   methods: {
+    //编辑
+    handleEdit(index, row) {
+      this.updateDia = true;
+      this.beEdit.ISBN = row.isbn;
+      this.beEdit.number = row.number;
+      this.beEdit.price = row.price;
+    },
+    async updateRow() {
+      let res = await this.axios.put("/api/manage/updateBookList", this.beEdit);
+      if (res.data.code == 200) {
+        this.$message.success("修改成功");
+      } else {
+        this.$message.warning("修改失败");
+      }
+      this.updateDia = false;
+      this.queryAllBook();
+    },
+    //删除
+    handleDelete(index, row) {
+      this.deleteDia = true;
+      this.beDeleteISBN = row.isbn;
+    },
+    async deleteBookList() {
+      let res = await this.axios.post("/api/manage/deleteBookList", {
+        ISBN: this.beDeleteISBN,
+      });
+      if (res.data.code == 200) {
+        this.$message.success("删除成功");
+      } else {
+        this.$message.warning("删除失败");
+      }
+      this.deleteDia = false;
+      this.queryAllBook();
+    },
+    // 页数选择框
     handleSizeChange(value) {
       this.booknum.pageSize = value;
       this.queryAllBook();
@@ -148,6 +267,18 @@ export default {
       this.booknum.currentPage = value;
       this.queryAllBook();
     },
+    // 加书
+    async addBookList() {
+      let res = await this.axios.post("/api/manage/addBookList", this.beInsert);
+      console.log(res);
+      if (res.data.code == 200) {
+        this.$message.success("添加成功");
+      } else {
+        this.$message.warning("添加失败");
+      }
+      this.addDia = false;
+    },
+    // 查书
     async searchStart() {
       if (this.beSearchISBN != "") {
         let res = await this.axios.get(
@@ -183,33 +314,12 @@ export default {
         this.$message.warning("获取失败");
       }
     },
-    async handleBorrow(index, row) {
-      this.borrowDia = true;
-      this.borrowISBN = row.isbn;
-      let borrowRes = await this.axios.post("/api/borrow/borrowBook?", {
-        params: {
-          userId: this.userInfo.userId,
-          ISBN: this.borrowISBN,
-        },
-      });
-      if (borrowRes.data.code == 200) {
-        this.$message.success("成功借出");
-      } else {
-        this.$message.warning("数量不足，仅可以预约");
-        this.bookingBook();
-      }
-    },
-    async bookingBook() {},
-  },
-  computed: {
-    ...mapState(["userInfo"]),
   },
   mounted() {
     this.queryAllBook();
   },
 };
 </script>
-
 <style lang="less" scoped>
 .header {
   background: #fff;
