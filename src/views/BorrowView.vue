@@ -184,14 +184,10 @@ export default {
       }
     },
     async handleBorrow(index, row) {
-      this.borrowDia = true;
       this.borrowISBN = row.isbn;
-      let borrowRes = await this.axios.post("/api/borrow/borrowBook?", {
-        params: {
-          userId: this.userInfo.userId,
-          ISBN: this.borrowISBN,
-        },
-      });
+      let borrowRes = await this.axios.post(
+        `/api/borrow/borrowBook?userId=${this.userInfo.userId}&ISBN=${this.borrowISBN}`
+      );
       if (borrowRes.data.code == 200) {
         this.$message.success("成功借出");
       } else {
@@ -199,7 +195,19 @@ export default {
         this.bookingBook();
       }
     },
-    async bookingBook() {},
+    async bookingBook(borrowISBN) {
+      this.borrowDia = true;
+      let bookingRes = await this.axios.post("/api/booking/addBooking", {
+        userId: this.userInfo.userId,
+        ISBN: borrowISBN,
+      });
+      if (bookingRes.data.code == 200) {
+        this.$message.success("成功借出");
+      } else {
+        this.$message.warning("数量不足，仅可以预约");
+      }
+      this.borrowDia = false;
+    },
   },
   computed: {
     ...mapState(["userInfo"]),
